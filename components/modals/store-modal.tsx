@@ -37,6 +37,7 @@ export const StoreModal = () => {
 
             console.log(response.data)
             toast.success("Berhasil membuat toko")
+            window.location.assign(`/${response.data.id}`)
         } catch (err) {
             toast.error("Gagal membuat toko")
         } finally {
