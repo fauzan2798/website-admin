@@ -55,7 +55,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
     const onSubmit = async (data: SettingsFormValues) => {
         try {
             setLoading(true)
-            await axios.patch(`/api/stores/${params.storeId}`, data)
+            await axios.patch(`/api/${params.storeId}`, data)
             router.refresh()
             toast.success("Toko berhasil diinput")
         } catch (error) {
@@ -68,11 +68,12 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
     const onDelete = async () => {
         try {
             setLoading(true)
-            await axios.delete(`/api/stores/${params.storeId}`)
+            await axios.delete(`/api/${params.storeId}`)
             router.refresh()
             router.push("/")
             toast.success("Toko berhasil dihapus")
         } catch (error) {
+            console.log(params.storeId)
             toast.error("Cek kembali data nya")
         } finally {
             setLoading(false)
