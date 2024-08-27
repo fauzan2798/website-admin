@@ -7,7 +7,7 @@ import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Heading } from "@/components/ui/heading"
 import { Separator } from "@/components/ui/separator"
-import { Banner } from "@prisma/client"
+import { Banner, Category } from "@prisma/client"
 import { Trash } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -26,20 +26,23 @@ import { AlertModal } from "@/components/modals/alert-modal"
 import { ApiAlert } from "@/components/ui/api-alert"
 import { useOrigin } from "@/hooks/use-origin"
 import ImageUpload from "@/components/ui/image-upload"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-interface BannerFormProps {
-    initialData: Banner | null
+interface CategoryFormProps {
+    initialData: Category | null
+    banners: Banner[]
 }
 
 const formSchema = z.object({
-    label: z.string().min(1),
-    imageUrl: z.string().min(1)
+    name: z.string().min(1),
+    bannerId: z.string().min(1)
 })
 
-type BannerFormValues = z.infer<typeof formSchema>
+type CategoryFormValues = z.infer<typeof formSchema>
 
-export const BannerForm: React.FC<BannerFormProps> = ({
-    initialData
+export const CategoryForm: React.FC<CategoryFormProps> = ({
+    banners,
+    initialData,
 }) => {
 
     const params = useParams()
@@ -49,29 +52,29 @@ export const BannerForm: React.FC<BannerFormProps> = ({
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     
-    const title = initialData ? "Edit Banner" : "Buat Banner"
-    const description = initialData ? "Edit Banner Toko" : "Buat Banner Toko"
-    const toastMessage = initialData ? "Banner berhasil diedit" : "Banner berhasil dibuat"
-    const action = initialData ? "Simpan Banner" : "Buat Banner"
+    const title = initialData ? "Edit Category" : "Buat Category"
+    const description = initialData ? "Edit Category Toko" : "Buat Category Toko"
+    const toastMessage = initialData ? "Category berhasil diedit" : "Category berhasil dibuat"
+    const action = initialData ? "Simpan Category" : "Buat Category"
     
 
-    const form = useForm<BannerFormValues>({
+    const form = useForm<CategoryFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: initialData || {
-            label: "",
-            imageUrl: ""
+            name: "",
+            bannerId: ""
         }
     })
 
-    const onSubmit = async (data: BannerFormValues) => {
+    const onSubmit = async (data: CategoryFormValues) => {
         try {
             setLoading(true)
             if (initialData) {
-                await axios.patch(`/api/${params.storeId}/banners/${params.bannerId}`, data)
+                await axios.patch(`/api/${params.storeId}/categories/${params.categoryId}`, data)
             } else {
-                await axios.post(`/api/${params.storeId}/banners`, data)
+                await axios.post(`/api/${params.storeId}/categories`, data)
             }
-            router.push(`/${params.storeId}/banners`)
+            router.push(`/${params.storeId}/categories`)
             router.refresh()
             toast.success(toastMessage)
         } catch (error) {
@@ -84,15 +87,14 @@ export const BannerForm: React.FC<BannerFormProps> = ({
     const onDelete = async () => {
         try {
             setLoading(true)
-            await axios.delete(`/api/${params.storeId}/banners/${params.bannerId}`)
+            await axios.delete(`/api/${params.storeId}/categories/${params.categoryId}`)
             router.push("/")
             router.refresh()
-            toast.success("Toko berhasil dihapus")
+            toast.success("Kategori berhasil dihapus")
         } catch (error) {
             toast.error("Cek kembali data nya")
         } finally {
             setLoading(false)
-            setOpen(false)
         }
     }
  
@@ -127,12 +129,12 @@ export const BannerForm: React.FC<BannerFormProps> = ({
                 <div className="grid grid-cols-3 gap-8">
                     <FormField
                         control={form.control}
-                        name="label"
+                        name="name"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Label</FormLabel>
+                                <FormLabel>Nama</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="Nama Toko" disabled={loading} {...field}/>
+                                    <Input placeholder="Nama Kategori" disabled={loading} {...field}/>
                                 </FormControl>
                                 <FormMessage/>
                             </FormItem>
@@ -140,17 +142,36 @@ export const BannerForm: React.FC<BannerFormProps> = ({
                     />
                     <FormField
                         control={form.control}
-                        name="imageUrl"
+                        name="bannerId"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Image</FormLabel>
+                                <FormLabel>Banner</FormLabel>
                                 <FormControl>
-                                    <ImageUpload 
-                                        disabled={loading}
-                                        onChange={(url) => field.onChange(url)}
-                                        onRemove={() => field.onChange("")}
-                                        value={field.value ? [field.value] : []}
-                                    />
+                                    <Select
+                                    disabled={loading}
+                                    onValueChange={field.onChange}
+                                    value={field.value}
+                                    defaultValue={field.value}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue
+                                                defaultValue={field.value}
+                                                placeholder={"Pilih Banner"}
+                                                />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {banners.map((banner) => (
+                                                <SelectItem
+                                                key={banner.id}
+                                                value={banner.id}
+                                                >
+                                                    {banner.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </FormControl>
                                 <FormMessage/>
                             </FormItem>
